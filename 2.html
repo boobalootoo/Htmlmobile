@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mobile HTML Editor & Preview</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #111;
+      color: white;
+    }
+
+    #editor, #preview {
+      width: 100vw;
+      height: 100vh;
+      display: none;
+    }
+
+    #editor {
+      background: #222;
+      padding: 10px;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    textarea {
+      width: 100%;
+      height: calc(100% - 60px);
+      font-family: monospace;
+      font-size: 16px;
+      background: #111;
+      color: #0f0;
+      border: none;
+      outline: none;
+      resize: none;
+    }
+
+    #preview {
+      background: white;
+      border: none;
+    }
+
+    #controls {
+      position: absolute;
+      bottom: 10px;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 6px 12px;
+      background: #333;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #555;
+    }
+
+    #toggleHint {
+      position: absolute;
+      bottom: 50px;
+      width: 100%;
+      text-align: center;
+      color: #aaa;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="editor">
+    <textarea id="code">
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Page</title>
+  <style>
+    body { background: lightblue; font-family: sans-serif; }
+    h1 { color: darkblue; }
+  </style>
+</head>
+<body>
+  <h1>Hello World</h1>
+  <p>This is a mobile preview test.</p>
+  <script>
+    console.log("JS works too!");
+  </script>
+</body>
+</html>
+    </textarea>
+
+    <div id="toggleHint">Shake to preview (or use buttons below)</div>
+
+    <div id="controls">
+      <button onclick="toggleView()">Toggle View</button>
+      <button onclick="downloadHTML()">Download</button>
+    </div>
+  </div>
+
+  <iframe id="preview"></iframe>
+
+  <script>
+    let isPreview = false;
+
+    function updatePreview() {
+      const code = document.getElementById('code').value;
+      const iframe = document.getElementById('preview');
+      iframe.srcdoc = code;
+    }
+
+    function toggleView() {
+      isPreview = !isPreview;
+
+      if (isPreview) {
+        updatePreview();
+        document.getElementById('editor').style.display = 'none';
+        document.getElementById('preview').style.display = 'block';
+      } else {
+        document.getElementById('editor').style.display = 'block';
+        document.getElementById('preview').style.display = 'none';
+      }
+    }
+
+    function downloadHTML() {
+      const code = document.getElementById('code').value;
+      const blob = new Blob([code], { type: "text/html" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "my-page.html";
+      a.click();
+    }
+
+    // Shake detection
+    let lastX = null, lastY = null, lastZ = null;
+    let shakeThreshold = 15;
+    let lastShakeTime = 0;
+
+    window.addEventListener("devicemotion", (event) => {
+      const acc = event.accelerationIncludingGravity;
+      if (!acc) return;
+
+      const { x, y, z } = acc;
+      if (lastX !== null && lastY !== null && lastZ !== null) {
+        const dx = Math.abs(x - lastX);
+        const dy = Math.abs(y - lastY);
+        const dz = Math.abs(z - lastZ);
+
+        if ((dx + dy + dz) > shakeThreshold) {
+          const now = Date.now();
+          if (now - lastShakeTime > 1000) {
+            toggleView();
+            lastShakeTime = now;
+          }
+        }
+      }
+
+      lastX = x;
+      lastY = y;
+      lastZ = z;
+    });
+
+    // Start in editor mode
+    document.getElementById('editor').style.display = 'block';
+  </script>
+</body>
+</html>
